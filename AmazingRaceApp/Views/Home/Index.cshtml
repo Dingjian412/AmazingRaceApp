@@ -1,0 +1,140 @@
+﻿@*@model  AmazingRaceApp.Models.LiveEventModels*@
+@{
+    ViewBag.Title = "Amazing Race Monitoring Web App";
+    var signalRBaseUrl = System.Configuration.ConfigurationManager.AppSettings["signalRServiceBaseUrl"];
+    var signalRHubsUrl = signalRBaseUrl + "/signalR/hubs";
+}
+
+<h1>@ViewBag.Title</h1>
+<div>
+    <table id="myTable">
+        <thead>
+        <tr>
+            <th>Ranking</th>
+            <th>TeamName</th>
+            <th>NCS</th>
+            <th>DTN</th>
+            <th>Lat</th>
+            <th>Lng</th>
+        </tr>
+        </thead>
+    </table>
+</div>
+
+<div class="container">
+    <br />
+
+    <input type="hidden" id="displayname" />
+    <ul id="discussion"></ul>
+</div>
+
+<p id="map"></p>
+
+@section scripts{
+    <script src="/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="/Scripts/jquery.signalR-2.2.3.min.js"></script>
+    <script src="@signalRHubsUrl"></script>
+    <script src="//cdn.datatables.net/1.10.2/js/jquery.dataTables.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var myTable;
+            LoadRankingList();
+
+            $.connection.hub.url = "@signalRBaseUrl" + "/signalr";
+            var myhub = $.connection.signalRHub;
+
+            console.log(myhub);
+
+            myhub.client.broadcast = function(event, team, x, y, ptStpPass) {
+                //alert(team + ' ' + team);
+                
+                $("#discussion").append("Event: " +
+                    event +
+                    ", Eeam: " +
+                    team +
+                    ", Current position X: " +
+                    x +
+                    " , Y: " +
+                    y +
+                    '<br/>');
+
+                //console.log(event, team, x, y, ptStpPass);
+                UpdateEvent(event, team, x, y, ptStpPass);
+            };
+
+
+            // Get the user name and store it to prepend to messages.
+            $('#displayname').val(prompt('Enter your name:', ''));
+            // Set initial focus to message input box.
+            $('#message').focus();
+            // Start the connection.
+            $.connection.hub.start().done(function() {
+                $('#sendmessage').click(function() {
+                    // Call the Send method on the hub.
+                    myhub.server.send($('#displayname').val(), $('#message').val());
+                    // Clear text box and reset focus for next comment.
+                    $('#message').val('').focus();
+                });
+            });
+        });
+
+        // This optional function html-encodes messages for display in the page.
+        function htmlEncode(value) {
+            var encodedValue = $('<div />').text(value).html();
+            return encodedValue;
+        }
+
+        function UpdateEvent(event, team, x, y, ptStpPass) {
+            //debugger;
+            var eventId = 1;
+            var teamId = 2;
+            var latitude = 1.323007;
+            var longtitude = 103.892381;
+            var stopId = 9;
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("MessageProcesser", "Home")',
+                data: '{eventId: ' + eventId
+                    + ', teamId: ' + teamId
+                    + ', latitude: ' + latitude
+                    + ', longtitude: ' + longtitude
+                    +', stopId: ' +stopId +' }',
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.result) {
+                        //debugger;
+                        LoadRankingList();
+                    } else {
+                        alert("System encountered an error when updating data, please reopen this page.")
+                    }
+                },
+                error: function(response) { alert(response.responseText) }
+            });
+        }
+
+        function LoadRankingList() {
+
+            myTable= $("#myTable").DataTable({
+                "ajax": {
+                    "url":'@Url.Action("LoadRankingList", "Home")',
+                    "type": "GET",
+                    "datatype": "json"
+                },
+                "columns": [
+                    { "data": "Ranking" },
+                    { "data": "TeamName" },
+                    { "data": "NumOfClearedStop" },
+                    { "data": "DistanceToNextStop" },
+                    { "data": "CurrentLat" },
+                    { "data": "CurrentLng" }
+                ],
+                //"destroy": true,
+                destroy: true,
+                searching: false,
+                paging: false
+            });
+        }
+    </script>
+}
