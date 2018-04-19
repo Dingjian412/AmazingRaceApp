@@ -17,6 +17,8 @@ namespace AmazingRaceApp.DAL
         public int ID { get; set; }
         public int EventID { get; set; }
         public int PitStopID { get; set; }
+        public Nullable<decimal> Lat { get; set; }
+        public Nullable<decimal> Lng { get; set; }
         public System.DateTime Createdtime { get; set; }
         public string CreatedBy { get; set; }
         public Nullable<System.DateTime> UpdatedTime { get; set; }

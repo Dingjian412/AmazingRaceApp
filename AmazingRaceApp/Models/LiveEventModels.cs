@@ -5,6 +5,7 @@ using System.Web;
 
 namespace AmazingRaceApp.Models
 {
+    
     public class EventTeamModel
     {
         public int TeamId { get; set; }
@@ -20,14 +21,20 @@ namespace AmazingRaceApp.Models
     public class EventStaffModel
     {
         public int StaffId { get; set; }
+        public int StaffName { get; set; }
         public Nullable<decimal> CurrentLat { get; set; }
         public Nullable<decimal> CurrentLng { get; set; }
     }
 
-    public class LiveEventModel
+    public class EventPitStopModel
     {
-        public List<EventTeamModel> InvolvedTeams { get; set; }
-        public List<EventStaffModel> InvolvedStaff { get; set; }
+        public int PitStopId { get; set; }
+        public string PitStopName { get; set; }
+        public Nullable<decimal> CurrentLat { get; set; }
+        public Nullable<decimal> CurrentLng { get; set; }
     }
+
+
+
 
 }

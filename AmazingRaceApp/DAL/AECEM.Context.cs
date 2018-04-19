@@ -26,13 +26,12 @@ namespace AmazingRaceApp.DAL
         }
     
         public virtual DbSet<Event> Events { get; set; }
-        public virtual DbSet<EventPit> EventPits { get; set; }
         public virtual DbSet<Participant> Participants { get; set; }
         public virtual DbSet<Staff> Staffs { get; set; }
         public virtual DbSet<Team> Teams { get; set; }
         public virtual DbSet<TeamParticipant> TeamParticipants { get; set; }
         public virtual DbSet<PitStop> PitStops { get; set; }
         public virtual DbSet<EventTeam> EventTeams { get; set; }
-        public virtual DbSet<InvolvedTeam> InvolvedTeams { get; set; }
+        public virtual DbSet<EventPit> EventPits { get; set; }
     }
 }

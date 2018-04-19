@@ -1,29 +1,33 @@
-﻿@*@model  AmazingRaceApp.Models.LiveEventModels*@
-@{
+﻿@{
     ViewBag.Title = "Amazing Race Monitoring Web App";
     var signalRBaseUrl = System.Configuration.ConfigurationManager.AppSettings["signalRServiceBaseUrl"];
     var signalRHubsUrl = signalRBaseUrl + "/signalR/hubs";
 }
+<style>
+    #map {
+        height: 400px;
+        width: 800px;
+    }
+</style>
 
-<h1>@ViewBag.Title</h1>
+
 <div>
     <table id="myTable">
         <thead>
-        <tr>
-            <th>Ranking</th>
-            <th>TeamName</th>
-            <th>NCS</th>
-            <th>DTN</th>
-            <th>Lat</th>
-            <th>Lng</th>
-        </tr>
+            <tr>
+                <th>Ranking</th>
+                <th>TeamName</th>
+                <th>NCS</th>
+                <th>DTN</th>
+                <th>Lat</th>
+                <th>Lng</th>
+            </tr>
         </thead>
     </table>
 </div>
 
 <div class="container">
     <br />
-
     <input type="hidden" id="displayname" />
     <ul id="discussion"></ul>
 </div>
@@ -35,11 +39,19 @@
     <script src="/Scripts/jquery.signalR-2.2.3.min.js"></script>
     <script src="@signalRHubsUrl"></script>
     <script src="//cdn.datatables.net/1.10.2/js/jquery.dataTables.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDBqHbZPyZGbYZJ8nsWrn4tv01vALd-mtA&callback=initMap"></script>
 
     <script>
         $(document).ready(function () {
             var myTable;
+            var map;
+            var teamMarker = [];
+            var staffMarker = [];
+            var pitStopMarker = [];
+            var uluru = { lat: 1.349131, lng: 103.850148 };
+            
             LoadRankingList();
+
 
             $.connection.hub.url = "@signalRBaseUrl" + "/signalr";
             var myhub = $.connection.signalRHub;
@@ -48,7 +60,7 @@
 
             myhub.client.broadcast = function(event, team, x, y, ptStpPass) {
                 //alert(team + ' ' + team);
-                
+
                 $("#discussion").append("Event: " +
                     event +
                     ", Eeam: " +
@@ -60,7 +72,7 @@
                     '<br/>');
 
                 //console.log(event, team, x, y, ptStpPass);
-                UpdateEvent(event, team, x, y, ptStpPass);
+                MessageProcessor(event, team, x, y, ptStpPass);
             };
 
 
@@ -84,8 +96,8 @@
             var encodedValue = $('<div />').text(value).html();
             return encodedValue;
         }
-        //Dingjian testing1
-        function UpdateEvent(event, team, x, y, ptStpPass) {
+
+        function MessageProcessor(event, team, x, y, ptStpPass) {
             //debugger;
             var eventId = 1;
             var teamId = 2;
@@ -94,7 +106,7 @@
             var stopId = 9;
             $.ajax({
                 type: "POST",
-                url: '@Url.Action("MessageProcesser", "Home")',
+                url: '@Url.Action("MessageProcessor", "Home")',
                 data: '{eventId: ' + eventId
                     + ', teamId: ' + teamId
                     + ', latitude: ' + latitude
@@ -104,8 +116,11 @@
                 dataType: "json",
                 success: function (response) {
                     if (response.result) {
-                        //debugger;
+
                         LoadRankingList();
+                        //initMap();
+                        LoadTeamLocation();
+                        LoadStaffLocation();
                     } else {
                         alert("System encountered an error when updating data, please reopen this page.")
                     }
@@ -130,11 +145,83 @@
                     { "data": "CurrentLat" },
                     { "data": "CurrentLng" }
                 ],
-                //"destroy": true,
                 destroy: true,
                 searching: false,
                 paging: false
             });
         }
+
+        
+        function LoadGoogleMap() {
+            map = new google.maps.Map(document.getElementById('map'),
+                {
+                    center: uluru,
+                    zoom: 12
+                });
+            LoadPitStopLocation();
+            LoadTeamLocation();
+            //LoadStaffLocation();
+        }
+
+        function LoadTeamLocation() {
+             $.get("@Url.Action("GetTeamLocation", "Home")",
+                function (data) {
+                    var marker = [];
+                    var message = [];
+                    var infoWin = [];
+                    for (var i = 0; i < data.length; i++) {
+
+                        var iconName = "../image/green.png"
+
+                        //message[i] = '<div id="content">' + '<h1>' + data.TeamName + '</h>' + '</div>';
+
+                        //infoWin[i] = new google.maps.infoWin({ content: message[i] });
+
+                        //google.maps.event.addListener(marker[i], 'mouseover', (function (marker, i) {
+                        //    return function infoWin[i].open(map.marker[i]);
+                        //})(marker[i], i));
+
+                        marker[i] = new google.maps.Marker(
+                            {
+                                position: { lat: data[i].CurrentLat, lng: data[i].CurrentLng },
+                                map: map,
+                                icon: iconName
+                            });
+                    }
+                });
+        };
+
+         function LoadStaffLocation() {
+             $.get("@Url.Action("GetStaffLocation", "Home")",
+                function (data) {
+                    var marker = [];
+                    for (var i = 0; i < data.length; i++) {
+                        var iconName = "../image/blue.png"
+                        marker[i] = new google.maps.Marker(
+                            {
+                                position: { lat: data[i].CurrentLat, lng: data[i].CurrentLng },
+                                map: map,
+                                icon: iconName
+                            });
+                    }
+                });
+        };
+
+         function LoadPitStopLocation() {
+             $.get("@Url.Action("GetPitStopLocation", "Home")",
+                function (data) {
+                    var marker = [];
+                    for (var i = 0; i < data.length; i++) {
+                        var iconName = "../image/orange.png"
+                        marker[i] = new google.maps.Marker(
+                            {
+                                position: { lat: data[i].CurrentLat, lng: data[i].CurrentLng },
+                                map: map,
+                                icon: iconName
+                            });
+                    }
+                });
+        };
+
     </script>
 }

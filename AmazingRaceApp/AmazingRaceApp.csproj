@@ -236,9 +236,6 @@
     <Compile Include="DAL\EventTeam.cs">
       <DependentUpon>AECEM.tt</DependentUpon>
     </Compile>
-    <Compile Include="DAL\InvolvedTeam.cs">
-      <DependentUpon>AECEM.tt</DependentUpon>
-    </Compile>
     <Compile Include="DAL\Participant.cs">
       <DependentUpon>AECEM.tt</DependentUpon>
     </Compile>
@@ -281,6 +278,9 @@
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
+    <Content Include="image\blue.png" />
+    <Content Include="image\green.png" />
+    <Content Include="image\orange.png" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="ApplicationInsights.config">

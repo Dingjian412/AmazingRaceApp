@@ -25,16 +25,22 @@
           <Property Name="ID" Type="int" Nullable="false" />
           <Property Name="EventID" Type="int" Nullable="false" />
           <Property Name="PitStopID" Type="int" Nullable="false" />
+          <Property Name="Lat" Type="decimal" Precision="9" Scale="6" />
+          <Property Name="Lng" Type="decimal" Precision="9" Scale="6" />
           <Property Name="Createdtime" Type="datetime" Nullable="false" />
           <Property Name="CreatedBy" Type="varchar" MaxLength="50" Nullable="false" />
           <Property Name="UpdatedTime" Type="datetime" />
           <Property Name="UpdatedBy" Type="varchar" MaxLength="50" />
         </EntityType>
+        <!--Errors Found During Generation:
+warning 6002: The table/view 'AECEventManagement.dbo.EventTeam' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
         <EntityType Name="EventTeam">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="EventID" />
+            <PropertyRef Name="TeamID" />
+            <PropertyRef Name="CreatedTime" />
+            <PropertyRef Name="CreatedBy" />
           </Key>
-          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="EventID" Type="int" Nullable="false" />
           <Property Name="TeamID" Type="int" Nullable="false" />
           <Property Name="CurrentLatitude" Type="decimal" Precision="9" Scale="6" />
@@ -202,11 +208,24 @@ warning 6002: The table/view 'AECEventManagement.dbo.InvolvedTeam' does not have
         <EntityContainer Name="AECEventManagementModelStoreContainer">
           <EntitySet Name="Event" EntityType="Self.Event" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="EventPit" EntityType="Self.EventPit" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="EventTeam" EntityType="Self.EventTeam" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Participant" EntityType="Self.Participant" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Staff" EntityType="Self.Staff" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Team" EntityType="Self.Team" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TeamParticipant" EntityType="Self.TeamParticipant" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="EventTeam" EntityType="Self.EventTeam" store:Type="Tables" store:Schema="dbo">
+            <DefiningQuery>SELECT 
+    [EventTeam].[EventID] AS [EventID], 
+    [EventTeam].[TeamID] AS [TeamID], 
+    [EventTeam].[CurrentLatitude] AS [CurrentLatitude], 
+    [EventTeam].[CurrentLongtitude] AS [CurrentLongtitude], 
+    [EventTeam].[NumOfClearned] AS [NumOfClearned], 
+    [EventTeam].[DistanceToNext] AS [DistanceToNext], 
+    [EventTeam].[CreatedTime] AS [CreatedTime], 
+    [EventTeam].[CreatedBy] AS [CreatedBy], 
+    [EventTeam].[UpdatedTime] AS [UpdatedTime], 
+    [EventTeam].[UpdatedBy] AS [UpdatedBy]
+    FROM [dbo].[EventTeam] AS [EventTeam]</DefiningQuery>
+          </EntitySet>
           <EntitySet Name="PitStop" EntityType="Self.PitStop" store:Type="Tables" store:Schema="dbo">
             <DefiningQuery>SELECT 
     [PitStop].[PitStopID] AS [PitStopID], 
@@ -270,21 +289,8 @@ warning 6002: The table/view 'AECEventManagement.dbo.InvolvedTeam' does not have
           <Property Name="CreatedBy" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="UpdatedTime" Type="DateTime" Precision="3" />
           <Property Name="UpdatedBy" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <NavigationProperty Name="EventPits" Relationship="Self.FK_EventPit_Event" FromRole="Event" ToRole="EventPit" />
           <NavigationProperty Name="EventTeams" Relationship="AECEventManagementModel.FK_EventTeam_Event" FromRole="Event" ToRole="EventTeam" />
-        </EntityType>
-        <EntityType Name="EventPit">
-          <Key>
-            <PropertyRef Name="ID" />
-          </Key>
-          <Property Name="ID" Type="Int32" Nullable="false" />
-          <Property Name="EventID" Type="Int32" Nullable="false" />
-          <Property Name="PitStopID" Type="Int32" Nullable="false" />
-          <Property Name="Createdtime" Type="DateTime" Nullable="false" Precision="3" />
-          <Property Name="CreatedBy" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
-          <Property Name="UpdatedTime" Type="DateTime" Precision="3" />
-          <Property Name="UpdatedBy" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <NavigationProperty Name="Event" Relationship="Self.FK_EventPit_Event" FromRole="EventPit" ToRole="Event" />
+          <NavigationProperty Name="EventPits" Relationship="AECEventManagementModel.FK_EventPit_Event" FromRole="Event" ToRole="EventPit" />
         </EntityType>
         <EntityType Name="Participant">
           <Key>
@@ -364,18 +370,6 @@ warning 6002: The table/view 'AECEventManagement.dbo.InvolvedTeam' does not have
           <Property Name="UpdatedTime" Type="DateTime" Precision="3" />
           <Property Name="UpdatedBy" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
         </EntityType>
-        <Association Name="FK_EventPit_Event">
-          <End Role="Event" Type="Self.Event" Multiplicity="1" />
-          <End Role="EventPit" Type="Self.EventPit" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Event">
-              <PropertyRef Name="EventID" />
-            </Principal>
-            <Dependent Role="EventPit">
-              <PropertyRef Name="EventID" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_TeamParticipant_Participant">
           <End Role="Participant" Type="Self.Participant" Multiplicity="1" />
           <End Role="TeamParticipant" Type="Self.TeamParticipant" Multiplicity="*" />
@@ -402,16 +396,11 @@ warning 6002: The table/view 'AECEventManagement.dbo.InvolvedTeam' does not have
         </Association>
         <EntityContainer Name="AECEventManagementEntities" annotation:LazyLoadingEnabled="true">
           <EntitySet Name="Events" EntityType="Self.Event" />
-          <EntitySet Name="EventPits" EntityType="Self.EventPit" />
           <EntitySet Name="Participants" EntityType="Self.Participant" />
           <EntitySet Name="Staffs" EntityType="Self.Staff" />
           <EntitySet Name="Teams" EntityType="Self.Team" />
           <EntitySet Name="TeamParticipants" EntityType="Self.TeamParticipant" />
           <EntitySet Name="PitStops" EntityType="Self.PitStop" />
-          <AssociationSet Name="FK_EventPit_Event" Association="Self.FK_EventPit_Event">
-            <End Role="Event" EntitySet="Events" />
-            <End Role="EventPit" EntitySet="EventPits" />
-          </AssociationSet>
           <AssociationSet Name="FK_TeamParticipant_Participant" Association="Self.FK_TeamParticipant_Participant">
             <End Role="Participant" EntitySet="Participants" />
             <End Role="TeamParticipant" EntitySet="TeamParticipants" />
@@ -429,13 +418,19 @@ warning 6002: The table/view 'AECEventManagement.dbo.InvolvedTeam' does not have
             <End Role="Team" EntitySet="Teams" />
             <End Role="EventTeam" EntitySet="EventTeams" />
           </AssociationSet>
-          <EntitySet Name="InvolvedTeams" EntityType="AECEventManagementModel.InvolvedTeam" />
+          <EntitySet Name="EventPits" EntityType="AECEventManagementModel.EventPit" />
+          <AssociationSet Name="FK_EventPit_Event" Association="AECEventManagementModel.FK_EventPit_Event">
+            <End Role="Event" EntitySet="Events" />
+            <End Role="EventPit" EntitySet="EventPits" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="EventTeam">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="EventID" />
+            <PropertyRef Name="TeamID" />
+            <PropertyRef Name="CreatedTime" />
+            <PropertyRef Name="CreatedBy" />
           </Key>
-          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="EventID" Type="Int32" Nullable="false" />
           <Property Name="TeamID" Type="Int32" Nullable="false" />
           <Property Name="CurrentLatitude" Type="Decimal" Precision="9" Scale="6" />
@@ -473,22 +468,33 @@ warning 6002: The table/view 'AECEventManagement.dbo.InvolvedTeam' does not have
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <EntityType Name="InvolvedTeam">
+        <EntityType Name="EventPit">
           <Key>
-            <PropertyRef Name="EventID" />
-            <PropertyRef Name="TeamID" />
-            <PropertyRef Name="TeamName" />
-            <PropertyRef Name="DeviceID" />
+            <PropertyRef Name="ID" />
           </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" />
           <Property Name="EventID" Type="Int32" Nullable="false" />
-          <Property Name="TeamID" Type="Int32" Nullable="false" />
-          <Property Name="TeamName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="DeviceID" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="CurrentLatitude" Type="Decimal" Precision="9" Scale="6" />
-          <Property Name="CurrentLongtitude" Type="Decimal" Precision="9" Scale="6" />
-          <Property Name="NumOfClearned" Type="Int32" />
-          <Property Name="DistanceToNext" Type="Decimal" Precision="9" Scale="2" />
+          <Property Name="PitStopID" Type="Int32" Nullable="false" />
+          <Property Name="Lat" Type="Decimal" Precision="9" Scale="6" />
+          <Property Name="Lng" Type="Decimal" Precision="9" Scale="6" />
+          <Property Name="Createdtime" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="CreatedBy" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="UpdatedTime" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Event" Relationship="AECEventManagementModel.FK_EventPit_Event" FromRole="EventPit" ToRole="Event" />
         </EntityType>
+        <Association Name="FK_EventPit_Event">
+          <End Type="AECEventManagementModel.Event" Role="Event" Multiplicity="1" />
+          <End Type="AECEventManagementModel.EventPit" Role="EventPit" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Event">
+              <PropertyRef Name="EventID" />
+            </Principal>
+            <Dependent Role="EventPit">
+              <PropertyRef Name="EventID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -503,19 +509,6 @@ warning 6002: The table/view 'AECEventManagement.dbo.InvolvedTeam' does not have
                 <ScalarProperty Name="EventTime" ColumnName="EventTime" />
                 <ScalarProperty Name="City" ColumnName="City" />
                 <ScalarProperty Name="CreatedTime" ColumnName="CreatedTime" />
-                <ScalarProperty Name="CreatedBy" ColumnName="CreatedBy" />
-                <ScalarProperty Name="UpdatedTime" ColumnName="UpdatedTime" />
-                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="EventPits">
-            <EntityTypeMapping TypeName="AECEventManagementModel.EventPit">
-              <MappingFragment StoreEntitySet="EventPit">
-                <ScalarProperty Name="ID" ColumnName="ID" />
-                <ScalarProperty Name="EventID" ColumnName="EventID" />
-                <ScalarProperty Name="PitStopID" ColumnName="PitStopID" />
-                <ScalarProperty Name="Createdtime" ColumnName="Createdtime" />
                 <ScalarProperty Name="CreatedBy" ColumnName="CreatedBy" />
                 <ScalarProperty Name="UpdatedTime" ColumnName="UpdatedTime" />
                 <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
@@ -606,21 +599,21 @@ warning 6002: The table/view 'AECEventManagement.dbo.InvolvedTeam' does not have
                 <ScalarProperty Name="CurrentLatitude" ColumnName="CurrentLatitude" />
                 <ScalarProperty Name="TeamID" ColumnName="TeamID" />
                 <ScalarProperty Name="EventID" ColumnName="EventID" />
-                <ScalarProperty Name="ID" ColumnName="ID" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="InvolvedTeams">
-            <EntityTypeMapping TypeName="AECEventManagementModel.InvolvedTeam">
-              <MappingFragment StoreEntitySet="InvolvedTeam">
-                <ScalarProperty Name="DistanceToNext" ColumnName="DistanceToNext" />
-                <ScalarProperty Name="NumOfClearned" ColumnName="NumOfClearned" />
-                <ScalarProperty Name="CurrentLongtitude" ColumnName="CurrentLongtitude" />
-                <ScalarProperty Name="CurrentLatitude" ColumnName="CurrentLatitude" />
-                <ScalarProperty Name="DeviceID" ColumnName="DeviceID" />
-                <ScalarProperty Name="TeamName" ColumnName="TeamName" />
-                <ScalarProperty Name="TeamID" ColumnName="TeamID" />
+          <EntitySetMapping Name="EventPits">
+            <EntityTypeMapping TypeName="AECEventManagementModel.EventPit">
+              <MappingFragment StoreEntitySet="EventPit">
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+                <ScalarProperty Name="UpdatedTime" ColumnName="UpdatedTime" />
+                <ScalarProperty Name="CreatedBy" ColumnName="CreatedBy" />
+                <ScalarProperty Name="Createdtime" ColumnName="Createdtime" />
+                <ScalarProperty Name="Lng" ColumnName="Lng" />
+                <ScalarProperty Name="Lat" ColumnName="Lat" />
+                <ScalarProperty Name="PitStopID" ColumnName="PitStopID" />
                 <ScalarProperty Name="EventID" ColumnName="EventID" />
+                <ScalarProperty Name="ID" ColumnName="ID" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

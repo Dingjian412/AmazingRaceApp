@@ -14,7 +14,6 @@ namespace AmazingRaceApp.DAL
     
     public partial class EventTeam
     {
-        public int ID { get; set; }
         public int EventID { get; set; }
         public int TeamID { get; set; }
         public Nullable<decimal> CurrentLatitude { get; set; }

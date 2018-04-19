@@ -17,8 +17,8 @@ namespace AmazingRaceApp.DAL
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public Event()
         {
-            this.EventPits = new HashSet<EventPit>();
             this.EventTeams = new HashSet<EventTeam>();
+            this.EventPits = new HashSet<EventPit>();
         }
     
         public int EventID { get; set; }
@@ -31,8 +31,8 @@ namespace AmazingRaceApp.DAL
         public string UpdatedBy { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<EventPit> EventPits { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<EventTeam> EventTeams { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<EventPit> EventPits { get; set; }
     }
 }
