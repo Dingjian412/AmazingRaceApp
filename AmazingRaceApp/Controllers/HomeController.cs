@@ -54,7 +54,7 @@ namespace AmazingRaceApp.Controllers
                                   CurrentLng = et.CurrentLongtitude,
                                   DistanceToNextStop = et.DistanceToNext,
                                   NumOfClearedStop = et.NumOfClearned
-                              }).OrderByDescending(x=>x.NumOfClearedStop).ThenBy(x=>x.DistanceToNextStop).ToList();
+                              }).OrderByDescending(x => x.NumOfClearedStop).ThenBy(x => x.DistanceToNextStop).ToList();
             }
 
             return eventTeams;
